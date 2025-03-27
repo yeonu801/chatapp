@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #chatContainer {
+            width: 400px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        #messageContainer {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .message {
+            margin-bottom: 10px;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatContainer">
+        <h2>Chat App</h2>
+        <div id="messageContainer"></div>
+        <input type="text" id="userName" placeholder="Enter your name" required />
+        <input type="text" id="messageInput" placeholder="Type a message" required />
+        <input type="submit" value="Send Message" onclick="sendMessage()" />
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+
+    <script>
+        // Firebase configuration (your Firebase project's config)
+        const firebaseConfig = {
+        apiKey: "AIzaSyA6x8blWszIwcOOzIIAgkdXDKqYB_cM14E",   authDomain: "chatapp-d91fd.firebaseapp.com",   databaseURL: "https://chatapp-d91fd-default-rtdb.firebaseio.com",   projectId: "chatapp-d91fd",   storageBucket: "chatapp-d91fd.firebasestorage.app",   messagingSenderId: "278682588338",   appId: "1:278682588338:web:3f8631131ad3723bd3e5ab",   measurementId: "G-C7VZP6HF0L"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database(app);
+
+        // Function to send message
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput").value;
+            const userName = document.getElementById("userName").value;
+
+            // Save message to Firebase Database
+            const newMessageRef = db.ref('messages').push();  // Changed to push to get a unique key for each message
+            newMessageRef.set({
+                username: userName,
+                message: messageInput
+            })
+            .then(() => {
+                console.log("Message sent!");
+                document.getElementById("messageInput").value = ''; // Clear message input
+            })
+            .catch((error) => {
+                console.error("Error sending message: ", error);
+            });
+        }
+
+        // Real-time listener for messages
+        const messagesRef = db.ref('messages');
+        messagesRef.on('child_added', (snapshot) => {  // Use 'child_added' to listen for new messages
+            const message = snapshot.val();
+            const messageContainer = document.getElementById("messageContainer");
+            // Display the message in the chat window, including my own message
+            messageContainer.innerHTML += `<div class="message"><span class="username">${message.username}:</span> ${message.message}</div>`;
+        });
+
+        // Function to show my own message in real-time
+        function showOwnMessage(userName, messageInput) {
+            const messageContainer = document.getElementById("messageContainer");
+            messageContainer.innerHTML += `<div class="message"><span class="username">${userName}:</span> ${messageInput}</div>`;
+        }
+
+        // Modify sendMessage function to also show the user's message instantly
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput").value;
+            const userName = document.getElementById("userName").value;
+
+            // Show my own message in the chat window instantly
+            showOwnMessage(userName, messageInput);
+
+            // Save message to Firebase Database
+            const newMessageRef = db.ref('messages').push();  
+            newMessageRef.set({
+                username: userName,
+                message: messageInput
+            })
+            .then(() => {
+                console.log("Message sent!");
+                document.getElementById("messageInput").value = ''; // Clear message input
+            })
+            .catch((error) => {
+                console.error("Error sending message: ", error);
+            });
+        }
+    </script>
+</body>
+</html>
